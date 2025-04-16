@@ -14,7 +14,10 @@ const posts=[
         title:'Post 2'
     }
 ]
-
+app.delete('/logout',(req,res)=>{
+    refreshTokens=refreshTokens.filter(token=>token!==req.body.token);
+    res.sendStatus(204);
+})
 app.get('/posts',authenticateToken,(req,res)=>{
     res.json(posts.filter(post=>post.username===req.user.name))
 })
@@ -26,15 +29,15 @@ app.post('/token',(req,res)=>{
   if(!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
   jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET,(err,user)=>{
       if(err) return res.sendStatus(403);
-      const accessToken=generateAccessToken({name:user.name})
-      ; 
+      const accessToken=generateAccessToken({name:user.name});
+      res.json({accessToken:accessToken}) 
   })
 })
 app.post('/login',(req,res)=>{
     const username=req.body.username;
     const user={name:username};
     const accessToken=generateAccessToken(user);
-    refreshTokens.push(generateRefreshToken(user));
+    refreshTokens.push(generateAccessToken(user));
     const refreshToken=jwt.sign(user,process.env.REFRESH_TOKEN_SECRET);
     res.json({accessToken:accessToken,refreshToken:refreshToken});
 })
